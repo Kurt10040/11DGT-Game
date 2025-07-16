@@ -1,18 +1,49 @@
 local CollectionService = game:GetService("CollectionService")
-local enemyFolder = workspace:WaitForChild("Enemies")
-print(enemyFolder:GetChildren())
 
 local tower = script:FindFirstAncestorWhichIsA("Model")
 if not tower:FindFirstChild("Humanoid") then warn("Humanoid not found in " .. tower.Name) end
 
+local range = Instance.new("Part")
+local touching_enemies = {}
+
+local function create_range(rangesize)
+	range.Name = "Range"
+	range.Shape = Enum.PartType.Ball
+	range.Size = Vector3.new(rangesize, rangesize, rangesize)
+	range.CFrame = tower.PrimaryPart.CFrame
+	range.Transparency = 0.7
+	range.Material = Enum.Material.ForceField
+	range.Color = Color3.fromRGB(0, 85, 255)
+	range.CanCollide = false
+	range.Anchored = true
+	range.Parent = tower
+	
+	range.Touched:Connect(function(hit)
+		if hit.Parent:FindFirstChild("Humanoid") and hit.Parent ~= tower and CollectionService:HasTag(hit.Parent, "Enemy") then
+			if not table.find(touching_enemies, hit.Parent) then
+				table.insert(touching_enemies, hit.Parent)
+			end
+		end
+	end)
+end
+
+create_range(20)
+local cooldown = 0.75
+local damage = 15
+local db = true
+local timer = 0
 while task.wait() do
-	for _, enemy in pairs(CollectionService:GetTagged("Enemy")) do
-		-- Measures the distance between the tower and the enemy--
-		local distance = (script.Parent.Position - enemy.Position).Magnitude
-		
-		if distance <= 10 then
-			print(enemy.Name)
-			enemy.Color = Color3.new(0.00784314, 0.0235294, 1)
+	print(touching_enemies)
+	
+	if db then
+		db = false
+		timer = time()
+		touching_enemies[1].Humanoid.Health -= damage
+		print("damaged "..touching_enemies[1].Name)
+	else
+		if time() - timer >= cooldown then
+			db = true
+			timer = 0
 		end
 	end
 end
