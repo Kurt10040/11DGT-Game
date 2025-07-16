@@ -1,0 +1,18 @@
+local CollectionService = game:GetService("CollectionService")
+local enemyFolder = workspace:WaitForChild("Enemies")
+print(enemyFolder:GetChildren())
+
+local tower = script:FindFirstAncestorWhichIsA("Model")
+if not tower:FindFirstChild("Humanoid") then warn("Humanoid not found in " .. tower.Name) end
+
+while task.wait() do
+	for _, enemy in pairs(CollectionService:GetTagged("Enemy")) do
+		-- Measures the distance between the tower and the enemy--
+		local distance = (script.Parent.Position - enemy.Position).Magnitude
+		
+		if distance <= 10 then
+			print(enemy.Name)
+			enemy.Color = Color3.new(0.00784314, 0.0235294, 1)
+		end
+	end
+end
