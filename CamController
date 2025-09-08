@@ -1,0 +1,31 @@
+-- Variables
+local Player = game.Players.LocalPlayer
+repeat wait() until Player.Character
+local Character = Player.Character
+local Camera = workspace.CurrentCamera
+local Mouse = game.Players.LocalPlayer:GetMouse()
+local DefaultCFrame = workspace:WaitForChild("CamPart").CFrame
+local Scale = 600
+local TweenService = game:GetService("TweenService")
+
+-- Makes it so that the player can't move while in the main menu
+Character:WaitForChild("HumanoidRootPart").Anchored = true
+
+-- Makes the player's camera able to be edited by the script
+repeat
+	Camera.CameraType = Enum.CameraType.Scriptable
+until Camera.CameraType == Enum.CameraType.Scriptable
+
+-- Creates the parallax effect while in the main menu screen.
+game:GetService("RunService").RenderStepped:Connect(function()
+	local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+	local MoveVector = Vector3.new((Mouse.X-center.X)/Scale, (Mouse.Y-center.Y)/Scale, 0)
+	Camera.CFrame = DefaultCFrame * CFrame.Angles(math.rad(-MoveVector.Y), math.rad(-MoveVector.X), math.rad(MoveVector.Z))
+end)
+
+-- Adds a blur effect to the background while in main menu screen
+game.Lighting.Blur.Enabled = true
+
+
+-- Note: this script might be taken from the internet because i dont know how to code very complex math like this.
+-- Note: This script gets enabled and disables by another script.
