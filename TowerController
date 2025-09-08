@@ -46,6 +46,8 @@ local billboardGUIFolder = towerGUI:WaitForChild("BillboardGUIs")
 local spawnButtonTemplate = templateFolder:WaitForChild("Spawn")
 local farmerHeaderTemplate = templateFolder:WaitForChild("BillboardGui")
 
+local priceTooltip = templateFolder:WaitForChild("Price")
+
 -- Misc variables
 local mouse = player:GetMouse()
 local camera = workspace.CurrentCamera
@@ -213,6 +215,7 @@ local function UpdateTowerSpawnButton(towerName : string, name, uses : number)
 	newButton.UsesLabel.Text = "x"..newButton.Uses.Value
 end
 
+-- Adds a header above the kumara tower to tell the player how much the tower buff's the player's income in percentage.
 local function AddHeader(newTower)
 	if newTower.Name ~= "KumaraFarmer" then
 		return
@@ -228,6 +231,25 @@ local function AddHeader(newTower)
 	header.Parent = newTower
 	header.Adornee = newTower
 	header.TextLabel.Text = "+"..(newTower:GetAttribute("Boost")*100).."%"
+end
+
+-- Greys out the spawn button of a tower if the player does not have enough money to buy the tower.
+local function LockSpawnButton(btn)
+	local towerName = btn.Name
+	local towerPrice = towerData[towerName]["Price"]
+	
+	if player.leaderstats.Money.Value >= towerPrice then
+		btn.BackgroundColor3 = Color3.fromRGB(188, 241, 213)
+		btn.UIStroke.Color = Color3.fromRGB(130, 198, 143)
+		btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+	else
+		btn.BackgroundColor3 = Color3.fromRGB(167, 167, 167)
+		btn.UIStroke.Color = Color3.fromRGB(145, 145, 145)
+		btn.TextColor3 = Color3.fromRGB(99, 99, 99)
+	end
+	
+	task.wait(0.2)
+	LockSpawnButton(btn)
 end
 
 --Tower interaction and tower upgrades--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -412,8 +434,9 @@ end)
 -- This function fires whenever a new button is added to the hotbar. It activates the button and links the button to the tower.
 hotbarScroll.ChildAdded:Connect(function(btn)
 	if btn:IsA("GuiButton") then
+		local towerPrice = towerData[btn.Name]["Price"]
 		btn.Activated:Connect(function()
-			local hasMoney = player.leaderstats.Money.Value >= towerData[btn.Name]["Price"] -- Checks the if the player has enough money to buy the chosen tower.
+			local hasMoney = player.leaderstats.Money.Value >= towerPrice -- Checks the if the player has enough money to buy the chosen tower.
 			if hasMoney then
 				if selectedTower then
 					local range = selectedTower:FindFirstChild("Range")
@@ -426,6 +449,17 @@ hotbarScroll.ChildAdded:Connect(function(btn)
 				print("LOL L SHAME "..player.Name.." does not have enough money to buy a "..btn.Name.." Tower 😂😂")
 			end
 		end)
+		
+		-- Creates a tooltip that follows the mouse when hovering over the tower button showing the price of that tower.
+		btn.MouseMoved:Connect(function(xpos,ypos)
+			priceTooltip.Visible = true
+			priceTooltip.Text = "$"..towerPrice
+			priceTooltip.Position = UDim2.fromOffset(xpos,ypos)
+		end)
+		btn.MouseLeave:Connect(function()
+			priceTooltip.Visible = false
+		end)
+		coroutine.wrap(LockSpawnButton)(btn)
 	end
 end)
 
@@ -433,26 +467,34 @@ end)
 startGameButton.Activated:Connect(function()
 	-- Creates the player's starting inventory when they enter the game.
 	inventory = {
-		Gooxsey = {
-			Display = "Goosey Tower",
-			Uses = 3
-		},
-		iii027 = {
-			Display = "Ngan Tower",
-			Uses = 3
-		},
+		--Gooxsey = {
+		--	Display = "Goosey Tower",
+		--	Uses = 3
+		--},
+		--iii027 = {
+		--	Display = "Ngan Tower",
+		--	Uses = 3
+		--},
 		KumaraFarmer = {
 			Display = "Kumara Farm",
-			Uses = 67
+			Uses = 4
 		},
 		Tawhirimatea = {
 			Display = "Tāwhirimātea",
-			Uses = 2
+			Uses = 5
 		},
 		Ruaumoko = {
 			Display = "Ruaumoko",
+			Uses = 5
+		},
+		TaneMahuta = {
+			Display = "Tāne-Mahuta",
 			Uses = 2
-		}
+		},
+		Tangaroa = {
+			Display = "Tangaroa",
+			Uses = 3
+		},
 	}
 
 	-- Transfer player's towers from backpack into inventory
