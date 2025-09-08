@@ -1,0 +1,123 @@
+local TowerData = {
+	KumaraFarmer = {
+		DisplayName = "Kumara Farm",
+		Price = 750,
+		ShopPrice = 100,
+		UpgradePrice = 175,
+		
+		Rarity = "Rare",
+		Special = {
+			Type = "Farm"
+		},
+
+		Tool = game.ReplicatedStorage.Towers:WaitForChild("KumaraFarmer"),
+
+		Cooldown = 3,
+		DPH = 1,
+		Range = 1
+	},
+	Tawhirimatea = {
+		DisplayName = "Tāwhirimātea",
+		Price = 150,
+		ShopPrice = 100,
+		UpgradePrice = 175,
+		
+		Rarity = "Common",
+		Special = {
+			Type = "Air"
+		},
+
+		Cooldown = 1,
+		DPH = 88,
+		Range = 16
+	},
+	Ruaumoko = {
+		DisplayName = "Ruaumoko",
+		Price = 250,
+		ShopPrice = 20,
+		UpgradePrice = 25,
+
+		Rarity = "Common",
+		Special = {
+			Type = "Fire"
+		},
+
+		Cooldown = 0.5,
+		DPH = 35,
+		Range = 12
+	},
+	TaneMahuta = {
+		DisplayName = "Tāne-Mahuta",
+		Price = 2000,
+		ShopPrice = 20,
+		UpgradePrice = 25,
+
+		Rarity = "Epic",
+		Special = {
+			Type = "Ground"
+		},
+
+		Cooldown = 3,
+		DPH = 160,
+		Range = 30
+	},
+	Tangaroa = {
+		DisplayName = "Tangaroa",
+		Price = 750,
+		ShopPrice = 20,
+		UpgradePrice = 25,
+
+		Rarity = "Rare",
+		Special = {
+			Type = "Water"
+		},
+
+		Cooldown = 2,
+		DPH = 100,
+		Range = 15
+	},
+	--Gooxsey = {
+	--	DisplayName = "Goosey",
+	--	Price = 50,
+	--	ShopPrice = 20,
+	--	UpgradePrice = 25,
+
+	--	Rarity = "Common",
+	--	Special = {
+	--		Type = "Fire"
+	--	},
+
+	--	Cooldown = 0.5,
+	--	DPH = 25,
+	--	Range = 20
+	--},
+	--iii027 = {
+	--	DisplayName = "Ngan",
+	--	Price = 67,
+	--	ShopPrice = 67000,
+	--	UpgradePrice = 50,
+
+	--	Rarity = "Rare",
+	--	Special = {
+	--		Type = "Ground"
+	--	},
+
+	--	Cooldown = 0.65,
+	--	DPH = 60,
+	--	Range = 10
+	--},
+}
+
+TowerData.TowerRarities = {
+	Common = {
+		Color = Color3.new(0.215686, 0.909804, 0.0941176)
+	},
+	Rare = {
+		Color = Color3.new(0.113725, 0.498039, 0.854902)
+	},
+	Epic = {
+		Color = Color3.new(0.670588, 0.160784, 0.796078)
+	}
+}
+
+return TowerData
