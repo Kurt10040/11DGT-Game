@@ -1,0 +1,318 @@
+-- Note: This script is stored in the server and cannot be accessed by client scripts. The tower controller script stored in the client communicates with this script through remote functions that can be accessed by both the server and client.
+
+-- Roblox services.
+local CollectionService = game:GetService("CollectionService")
+local RStorage = game:GetService("ReplicatedStorage")
+
+-- Remote functions and events.
+local eventsFolder = RStorage:WaitForChild("Events")
+local functionsFolder = RStorage:WaitForChild("Functions")
+local placeTowerFunction = functionsFolder:WaitForChild("PlaceTower")
+local sellTowerFunction = functionsFolder:WaitForChild("SellTower")
+local changeTargetMethodFunction = functionsFolder:WaitForChild("ChangeTargetMethod")
+
+-- Workspace objects
+local workspaceTowersFolder = workspace:WaitForChild("Towers")
+local rangePart = RStorage:WaitForChild("Towers"):WaitForChild("Range")
+
+local map = workspace.Beginners_Map
+
+-- Tower data module & other tower related data.
+local towerData = require(RStorage:WaitForChild("Towers"):WaitForChild("TowerData"))
+local specialTypes = {
+	Invis = {"Water"},
+	Wood = {"Fire", "Ground"},
+	Flying = {"Air"},
+}
+
+local moneyBoosts = {}
+
+local tower = {}
+
+
+-- Makes the tower face it's target.
+function LookAtEnemy(newTower, targetEnemy)
+	local hrp = newTower.HumanoidRootPart
+	local cframe = CFrame.lookAt(hrp.Position, Vector3.new(targetEnemy.HumanoidRootPart.Position.X, hrp.Position.Y, targetEnemy.HumanoidRootPart.Position.Z))
+	hrp.CFrame = cframe
+end
+
+-- A visual to show when the tower attacks the enemy.
+function visual(newtower, enemy)
+	local part = Instance.new("Part")
+	part.Anchored = true
+	part.CanCollide = false
+	part.Parent = workspace
+	part.Size = Vector3.new(.167,.167,(newtower.Head.Position - enemy.HumanoidRootPart.Position).Magnitude)
+	part.CFrame = CFrame.new(newtower.Head.Position,enemy.HumanoidRootPart.Position) * CFrame.new(0,0,-((newtower.Head.Position - enemy.HumanoidRootPart.Position).Magnitude/2))
+	part.Color = Color3.fromRGB(255, 0, 0)
+	part.Material = Enum.Material.Neon
+	task.delay(0.05,function()
+		part:Destroy()
+	end)	
+end
+
+-- Looks for a target for the tower based on the given target method.
+function tower.FindTarget(newTower,method)
+	local rangeSize = newTower:GetAttribute("Range")
+
+	local bestTarget = nil
+	local bestDist = nil
+	local bestPoint = nil
+	local bestHealth = 0
+	
+	--if 
+	
+	for i, enemy in ipairs(CollectionService:GetTagged("Enemy")) do
+		if not enemy:IsDescendantOf(workspace) then return nil end  -- This is so that the code does not detect any enemies that are not visible in the world.
+		
+		-- Calculates the distance between the enemy and the tower.
+		local dx = enemy.HumanoidRootPart.Position.X - newTower.HumanoidRootPart.Position.X
+		local dz = enemy.HumanoidRootPart.Position.Z - newTower.HumanoidRootPart.Position.Z
+		local distance = math.sqrt((dx^2) + (dz^2))
+		-- Calculate the distance of the enemy from its next target waypoint.
+		local waypointDistance = (enemy.HumanoidRootPart.Position - map.Waypoints_Beginners[enemy.NextWaypoint.Value].Position).Magnitude
+		
+		-- Checks if the distance between the enemy is within the tower's range.
+		if distance <= rangeSize then
+			if method == "First" then -- Targets the enemy that is furthest ahead to the base
+				if bestPoint == nil or enemy.NextWaypoint.Value >= bestPoint then
+					bestPoint = enemy.NextWaypoint.Value
+					if bestDist == nil or waypointDistance < bestDist then
+						bestDist = waypointDistance
+						bestTarget = enemy
+					end
+				end
+			elseif method == "Last" then -- Targets the enemy that is farthest away from the base
+				if bestPoint == nil or enemy.NextWaypoint.Value <= bestPoint then
+					bestPoint = enemy.NextWaypoint.Value
+					if bestDist == nil or waypointDistance >= bestDist then
+						bestDist = waypointDistance
+						bestTarget = enemy
+					end
+				end
+			elseif method == "Closest" then -- Targets the enemy that is closest to the tower
+				if bestDist == nil or distance <= bestDist then
+					bestDist = distance
+					bestTarget = enemy
+				end
+			elseif method == "Strongest" then -- Targets the enemy with the most health
+				if enemy.Humanoid.Health >= bestHealth then
+					bestHealth = enemy.Humanoid.Health
+					bestTarget = enemy
+				end
+			else
+				warn("Unknown enemy target method detected from tower:", newTower)
+			end
+		end
+	end
+	return bestTarget
+end
+
+-- Main attack function of all towers (excluding boost/buff towers).
+function tower.Attack(newTower)
+	if not newTower:FindFirstChild("HumanoidRootPart") then return end -- This prevents the tower from attacking if it has been destroyed.
+	
+	-- An if statement tower that determines the targetting method that the tower will use to find its desired target enemy depending on the 'TargetMethod' attribute of the specific tower.
+	local towerTargetMethod = newTower:GetAttribute("TargetMethod")
+	local target = nil
+	
+	target = tower.FindTarget(newTower,towerTargetMethod)
+	
+	-- If there is an enemy within range, the tower will look at the enemy and deal damage to it.
+	if target then
+		if not target:IsDescendantOf(workspace) then return end
+		
+		local damage = 0
+		
+		-- Damage Reduction System
+		local DR = target:GetAttribute("DamageReduce")
+		if DR then
+			damage = (newTower:GetAttribute("DPH") * (1 - DR))
+		else
+			damage = newTower:GetAttribute("DPH")
+		end
+		
+		-- Special tower and mob type detection
+		local mobSpecial = target:GetAttribute("Special")
+		if mobSpecial and specialTypes[mobSpecial] then
+			if not table.find(specialTypes[mobSpecial],towerData[newTower.Name]["Special"]["Type"]) then
+				damage = 0
+			end
+		end
+		
+		-- Damage the enemy only if the damage is greater than 0.
+		if damage > 0 then
+			LookAtEnemy(newTower, target)
+			visual(newTower,target)
+			target.Humanoid.Health -= damage
+		end
+		task.wait(newTower:GetAttribute("Cooldown"))
+	else
+		wait()
+	end
+	
+	tower.Attack(newTower) -- Calls the function again to start the process over， creating an infinite loop.
+end
+
+-- This function is for towers that apply a boost to the player's income. This function is called by the Mob handler module script written by Ventresco (I just added a few lines of code).
+function tower.MoneyBoost(amount)
+	local total = 0
+	
+	-- Adds up all the boosts of the boost towers the player has placed.
+	for i,v in moneyBoosts do
+		if table.find(workspaceTowersFolder:GetChildren(),i) then
+			total += v
+		else
+			moneyBoosts[i] = nil
+		end
+	end
+	
+	-- Increases the player's money by the total amount tallied up by previous code section.
+	for i,v in pairs(game.Players:GetPlayers()) do
+		v.leaderstats.Money.Value += amount * total
+	end
+end
+
+-- This function replaces the tower.Attack function for farm towers. It adds the tower's boost amount to a table that is used by the tower.MoneyBoost function to boost the player's money.
+function tower.Farm(newTower)
+	moneyBoosts[newTower] = newTower:GetAttribute("Boost")
+end
+
+-- Main attack function of all towers (excluding boost/buff towers). 
+function tower.Buff(newTower)
+--[[
+	if not newTower:FindFirstChild("HumanoidRootPart") then return end -- This prevents the tower from attacking if it has been destroyed.
+
+	local targets = {}
+
+	targets = tower.FindTarget(newTower,"Buff")
+
+	-- If there is an enemy within range, the tower will look at the enemy and deal damage to it.
+	if targets then
+		for target in targets do
+			if not targets:IsDescendantOf(workspace) then return end
+			
+		end
+
+		local boost = 0
+
+		-- Damage the enemy only if the damage is greater than 0.
+		if boost > 0 then
+			LookAtEnemy(newTower, targets)
+			visual(newTower,targets)
+			targets.Humanoid.Health -= boost
+		end
+		task.wait(newTower:GetAttribute("Cooldown"))
+	else
+		wait()
+	end
+
+	tower.Buff(newTower) -- Calls the function again to start the process over， creating an infinite loop.
+--]]
+end
+-- Sels the given tower and puts it back into the given player's hotbar. Also gives back some money to the player.
+function tower.Sell(player, soldTower)
+	-- Sell price is calculated with this formula: (Tower Price + (Tower Upgrade Price * Tower Upgrade Tier)) / 2
+	local sellPrice = (towerData[soldTower.Name]["Price"] + (towerData[soldTower.Name]["UpgradePrice"] * soldTower:GetAttribute("UpgradeTier"))) / 2
+	player.leaderstats.Money.Value += sellPrice
+	
+	soldTower:Destroy()
+	return true
+end
+
+-- Changes the target mode of the given tower. This function is called by the tower menu UI.
+function tower.ChangeTargetMode(player, model)
+	local targetMode = model:GetAttribute("TargetMethod")
+	local modes = {"First", "Last", "Closest", "Strongest"}
+	local modeIndex = table.find(modes,targetMode)
+	
+	if modeIndex < #modes then
+		model:SetAttribute("TargetMethod",modes[modeIndex + 1])
+	else
+		model:SetAttribute("TargetMethod",modes[1])
+	end
+	return model:GetAttribute("TargetMethod")
+end
+
+-- Spawns a new tower into the world or upgrades a currently existing tower.
+function tower.Spawn(player, name, cframe, upgradeData, previous)
+	local towerExists = RStorage.Towers:FindFirstChild(name)
+	
+	if towerExists then
+		if player.leaderstats.Money.Value >= towerData[name]["Price"] then -- Checks if the player has enough money to buy the tower.
+			player.leaderstats.Money.Value -= towerData[name]["Price"]
+			
+			-- Creates a new tower model if a new tower is being placed, if not that means the tower is being upgraded
+			local newTower = nil
+			if previous then
+				newTower = previous
+			else
+				newTower = towerExists:Clone()
+			end
+			
+			
+			newTower:SetPrimaryPartCFrame(cframe)
+			newTower.Parent = workspaceTowersFolder
+			newTower.PrimaryPart.Anchored = true
+
+			newTower:AddTag("Tower")
+			
+			if upgradeData then
+				for i,v in upgradeData do
+					if i == "Boost" then
+						newTower:SetAttribute(i,v)
+					else
+						newTower:SetAttribute(i,math.floor(v * 100 + 0.5) / 100)
+					end
+				end
+			end
+
+			local towerType = towerData[newTower.Name]["Special"]["Type"]
+			if towerType ~= "Farm" then
+				tower.Range(newTower)
+				newTower.Range.Transparency = 1
+			end
+
+			for i,object in ipairs(newTower:GetDescendants()) do
+				if object:IsA("BasePart") then
+					object.CollisionGroup = "Tower"
+				end
+			end
+			
+			if towerType == "Farm" then
+				tower.Farm(newTower)
+			elseif towerType == "Boost" then
+				tower.Buff(newTower)
+			else
+				coroutine.wrap(tower.Attack)(newTower)
+			end
+			return newTower
+		else
+			warn("Not enough money to spawn tower")
+			return false
+		end
+	end
+end
+
+placeTowerFunction.OnServerInvoke = tower.Spawn
+sellTowerFunction.OnServerInvoke = tower.Sell
+changeTargetMethodFunction.OnServerInvoke = tower.ChangeTargetMode
+
+-- Adds a sphere part as a range visual for the player to see the tower's range.
+function tower.Range(newTower)
+	local range = nil
+	local rangeSize = newTower:GetAttribute("Range") -- Gets the tower attributes and assigns them to variable rangeSize to be used later
+
+	if newTower:FindFirstChild("Range") then 
+		range = newTower:FindFirstChild("Range")
+	else
+		range = rangePart:Clone()
+		range.CFrame = newTower.PrimaryPart.CFrame
+		range.Parent = newTower
+	end
+	
+	range.Size = Vector3.new(rangeSize*2, rangeSize*2, rangeSize*2)
+end
+
+return tower
