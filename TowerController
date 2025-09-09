@@ -184,7 +184,7 @@ local function UpdateTowerInfo()
 	towerToPreview.Parent = towerPreview
 
 	if towerUT < 4 then
-		upgradeButton.Text = "Upgrade $"..((towerUT + 1) * towerData[selectedTower.Name]["Price"])
+		upgradeButton.Text = "Upgrade $"..((towerUT + 1) * towerData[selectedTower.Name]["UpgradePrice"])
 		upgradeButton.BackgroundColor3 = Color3.fromRGB(0,200,255)
 		upgradeButton.UIStroke.Color = Color3.fromHSV(0.533333, 1, 0.72549)
 	else
@@ -286,7 +286,7 @@ upgradeButton.Activated:Connect(function()
 	if not selectedTower then return end
 
 	local upgradeLevel = selectedTower:GetAttribute("UpgradeTier")
-	if (upgradeLevel < 4)  and player.leaderstats.Money.Value >= ((upgradeLevel + 1) * towerData[selectedTower.Name]["Price"]) then
+	if (upgradeLevel < 4)  and player.leaderstats.Money.Value >= ((upgradeLevel + 1) * towerData[selectedTower.Name]["UpgradePrice"]) then
 		
 		local upgrade = {}
 		if towerData[selectedTower.Name]["Special"]["Type"] == "Farm" then
