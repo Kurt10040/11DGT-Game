@@ -1,0 +1,27 @@
+-- Roblox services
+local dataStoreService = game:GetService("DataStoreService")
+local saveStore = dataStoreService:GetDataStore("SaveStore")
+
+local RStorage = game:GetService("ReplicatedStorage")
+
+game.Players.PlayerRemoving:Connect(function(player)
+	local moneySave = player:FindFirstChild("leaderstats"):WaitForChild("Money")
+	local gemsSave = player:FindFirstChild("leaderstats"):WaitForChild("Gems")
+	pcall(function()
+		--saveStore:SetAsync(player.UserId.."-money",moneySave.Value)
+		saveStore:SetAsync(player.UserId.."-gems",gemsSave.Value)
+	end)
+end)
+
+game.Players.PlayerAdded:Connect(function(player)
+	wait()
+	local ldstats = player:WaitForChild("leaderstats")
+	local moneyStat = ldstats:WaitForChild("Money")
+	local moneyData = saveStore:GetAsync(player.UserId.."-money")
+	--moneyStat.Value = moneyData
+	moneyStat.Value = 500
+	
+	local gemsStat = player:FindFirstChild("leaderstats"):WaitForChild("Gems")
+	local gemsData = saveStore:GetAsync(player.UserId.."-gems")
+	gemsStat.Value = gemsData
+end)
