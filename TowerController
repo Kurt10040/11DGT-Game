@@ -404,7 +404,7 @@ RService.RenderStepped:Connect(function()
 		local result = MouseRayCast({towerToSpawn, game.Players.LocalPlayer.Character},"Placing")  -- Casts a ray from the player's camera to the mouse position.
 		if result and result.Instance then
 			-- Colors the placeholder tower green if the player can place the tower there and red if they can't.
-			if result.Instance.Parent.Name == "TowerPlaceable" then
+			if result.Instance:FindFirstAncestor("TowerPlaceable") then
 				canPlace = true
 				ColorPlaceholder(Color3.new(0, 1, 0))
 			else
@@ -467,18 +467,6 @@ end)
 startGameButton.Activated:Connect(function()
 	-- Creates the player's starting inventory when they enter the game.
 	inventory = {
-		--Gooxsey = {
-		--	Display = "Goosey Tower",
-		--	Uses = 3
-		--},
-		--iii027 = {
-		--	Display = "Ngan Tower",
-		--	Uses = 3
-		--},
-		KumaraFarmer = {
-			Display = "Kumara Farm",
-			Uses = 4
-		},
 		Tawhirimatea = {
 			Display = "Tāwhirimātea",
 			Uses = 5
@@ -487,13 +475,17 @@ startGameButton.Activated:Connect(function()
 			Display = "Ruaumoko",
 			Uses = 5
 		},
-		TaneMahuta = {
-			Display = "Tāne-Mahuta",
-			Uses = 2
-		},
 		Tangaroa = {
 			Display = "Tangaroa",
 			Uses = 3
+		},
+		KumaraFarmer = {
+			Display = "Kumara Farm",
+			Uses = 4
+		},
+		TaneMahuta = {
+			Display = "Tāne-Mahuta",
+			Uses = 2
 		},
 	}
 
