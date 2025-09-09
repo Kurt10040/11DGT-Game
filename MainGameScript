@@ -1,8 +1,7 @@
 -- This is Ven and Kurt's code
-
---local KumaraFarm = game.ReplicatedStorage.Towers.KumaraFarm
-
 -- Local means making/assigning a new variable
+
+-- Variables
 local RStorage = game: GetService("ReplicatedStorage")
 
 local InRound = RStorage:WaitForChild("InRound")
@@ -149,6 +148,12 @@ gameStartEvent.OnServerEvent:Connect(function()
 			-- If statements for the mobs to stop spawning if the player's base hp reches 0 or the player wins
 			if (#map.Mob:GetChildren() == 0 and spawning == false) or base.CurrentHealth <= 0 then break end
 		end 
+		
+		-- The player earns a little bit of money every time they pass a wave
+		for _,player in pairs(game.Players:GetPlayers()) do
+			player.leaderstats.Money.Value += 50 * (1 + (wave/10))
+		end
+		
 		-- This one as well (If statements) to fire the 'gameOver' event
 		if base.CurrentHealth <= 0 then
 			gameOver = true
