@@ -20,7 +20,7 @@ local TowerData = {
 		DisplayName = "Tāwhirimātea",
 		Price = 150,
 		ShopPrice = 100,
-		UpgradePrice = 175,
+		UpgradePrice = 50,
 		
 		Rarity = "Common",
 		Special = {
@@ -35,7 +35,7 @@ local TowerData = {
 		DisplayName = "Ruaumoko",
 		Price = 250,
 		ShopPrice = 20,
-		UpgradePrice = 25,
+		UpgradePrice = 50,
 
 		Rarity = "Common",
 		Special = {
@@ -50,7 +50,7 @@ local TowerData = {
 		DisplayName = "Tāne-Mahuta",
 		Price = 2000,
 		ShopPrice = 20,
-		UpgradePrice = 25,
+		UpgradePrice = 670,
 
 		Rarity = "Epic",
 		Special = {
@@ -63,9 +63,9 @@ local TowerData = {
 	},
 	Tangaroa = {
 		DisplayName = "Tangaroa",
-		Price = 750,
+		Price = 730,
 		ShopPrice = 20,
-		UpgradePrice = 25,
+		UpgradePrice = 250,
 
 		Rarity = "Rare",
 		Special = {
